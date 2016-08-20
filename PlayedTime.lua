@@ -33,6 +33,7 @@ local SAVEDVARS = {
 				},
 			},
 		},
+		["expandedHidden"] = false,
 		["expandedRealms"] = {
 			["*"] = false,
 		},

@@ -213,10 +213,12 @@ function addon:BrokerOnEnter(frame, tooltip)
 	tooltip:SetClampedToScreen(true);
 	
 	tooltip:AddHeader(TEX_MODULE_ICON .. " |cffffdd00Played|cffffffffTime|r");
-	tooltip:AddLine(" ");
+	tooltip:AddSeparator();
 	
 	local tooltipdata = addon:PrepareTooltipData();
 	
+	-----------------------------------------
+	-- Current character
 	do
 		local name, realm, faction, data = addon:UnpackCharacterInfo(tooltipdata.currentCharacter);
 		local color = addon:GetCharacterColor(name);
@@ -233,8 +235,12 @@ function addon:BrokerOnEnter(frame, tooltip)
 			"|cffffd200Time on this level|r",
 			addon:FormatTime(data.levelTime, addon.db.global.UseShort)
 		);
+		
+		tooltip:AddLine(" ");
 	end
 	
+	-----------------------------------------
+	-- Current realm
 	do
 		for _, charInfo in ipairs(tooltipdata.currentRealm.characters) do
 			local name, realm, faction, data = addon:UnpackCharacterInfo(charInfo);
@@ -255,14 +261,19 @@ function addon:BrokerOnEnter(frame, tooltip)
 	end
 	
 	if(#tooltipdata.currentRealm.characters > 1) then
+		tooltip:AddSeparator();
 		tooltip:AddLine(
-			"|cffacee44Realm total|r",
+			"|cffffd200Realm total|r",
 			addon:FormatTime(tooltipdata.currentRealm.timePlayed, addon.db.global.UseShort)
 		);
 	end
 	
+	-----------------------------------------
+	-- Other realms
 	for _, realmInfo in ipairs(tooltipdata.realms) do
 		local realm = realmInfo.realm;
+		
+		tooltip:AddLine(" ");
 		
 		local isExpanded = self.db.global.expandedRealms[realm];
 		
@@ -271,10 +282,6 @@ function addon:BrokerOnEnter(frame, tooltip)
 			addon:FormatTime(realmInfo.timePlayed, addon.db.global.UseShort)
 		);
 		
-		if(isExpanded) then
-			tooltip:AddSeparator();
-		end
-		
 		tooltip:SetLineScript(lineIndex, "OnMouseUp", function(self, _, button)
 			if(button == "LeftButton") then
 				addon.db.global.expandedRealms[realm] = not addon.db.global.expandedRealms[realm];
@@ -282,25 +289,70 @@ function addon:BrokerOnEnter(frame, tooltip)
 			end
 		end);
 		
-		for _, charInfo in ipairs(realmInfo.characters) do
-			local name, realm, faction, data = addon:UnpackCharacterInfo(charInfo);
+		if(isExpanded) then
+			tooltip:AddSeparator();
+				
+			for _, charInfo in ipairs(realmInfo.characters) do
+				local name, realm, faction, data = addon:UnpackCharacterInfo(charInfo);
+				
+				local color = addon:GetCharacterColor(name, realm, faction);
+				local classIcon = addon:GetClassIconString(data.class);
+				local factionIcon = addon.db.global.ShowFactions and addon:GetFactionIconString(faction) or "";
+				
+				local lineIndex = tooltip:AddLine(
+					("%s%s |c%s%s|r |cffffffff(%d)|r"):format(factionIcon, classIcon, color, name, data.level),
+					addon:FormatTime(data.totalTime, addon.db.global.UseShort)
+				);
+				
+				addon:AddTooltipCharacterScripts(tooltip, lineIndex, name, realm, faction);
+			end
+		end
+	end
+	
+	-----------------------------------------
+	-- Hidden characters
+	if(#tooltipdata.hiddenCharacters.characters > 0) then
+		tooltip:AddLine(" ");
+		
+		local isExpanded = self.db.global.expandedHidden;
+		
+		local lineIndex = tooltip:AddLine(
+			("|cffffd200Hidden|r (%d)"):format(#tooltipdata.hiddenCharacters.characters),
+			addon:FormatTime(tooltipdata.hiddenCharacters.timePlayed, addon.db.global.UseShort)
+		);
+		
+		tooltip:SetLineScript(lineIndex, "OnMouseUp", function(self, _, button)
+			if(button == "LeftButton") then
+				addon.db.global.expandedHidden = not addon.db.global.expandedHidden;
+				addon:UpdateOpenTooltip();
+			end
+		end);
+		
+		if(isExpanded) then
+			tooltip:AddSeparator();
 			
-			local color = addon:GetCharacterColor(name, realm, faction);
-			local classIcon = addon:GetClassIconString(data.class);
-			local factionIcon = addon.db.global.ShowFactions and FACTION_ICONS[faction] or "";
-			
-			local lineIndex = tooltip:AddLine(
-				("%s%s |c%s%s|r |cffffffff(%d)|r"):format(factionIcon, classIcon, color, name, data.level),
-				addon:FormatTime(data.totalTime, addon.db.global.UseShort)
-			);
-			
-			addon:AddTooltipCharacterScripts(tooltip, lineIndex, name, realm, faction);
+			for _, charInfo in ipairs(tooltipdata.hiddenCharacters.characters) do
+				local name, realm, faction, data = addon:UnpackCharacterInfo(charInfo);
+				
+				local fullname = addon:FormatName(name .. "-" .. realm);
+				local color = addon:GetCharacterColor(name, realm, faction);
+				
+				local classIcon = addon:GetClassIconString(data.class);
+				local factionIcon = addon.db.global.ShowFactions and addon:GetFactionIconString(faction) or "";
+				
+				local lineIndex = tooltip:AddLine(
+					("%s%s |c%s%s|r |cffffffff(%d)|r"):format(factionIcon, classIcon, color, fullname, data.level),
+					addon:FormatTime(data.totalTime, addon.db.global.UseShort)
+				);
+					
+				addon:AddTooltipCharacterScripts(tooltip, lineIndex, name, realm, faction);
+			end
 		end
 	end
 	
 	tooltip:AddLine(" ");
 	tooltip:AddSeparator();
-	tooltip:AddLine("|cffacee44Total time played|r", addon:FormatTime(totalTimePlayed, addon.db.global.UseShort));
+	tooltip:AddLine("|cffacee44Total time played|r", addon:FormatTime(tooltipdata.totalTimePlayed, addon.db.global.UseShort));
 	
 	tooltip:SetAutoHideDelay(0.02, frame);
 	
