@@ -9,6 +9,7 @@ local addon = LibStub("AceAddon-3.0"):NewAddon(select(2, ...), ADDON_NAME, "AceE
 _G[ADDON_NAME] = addon;
 
 local LibExtraTip = LibStub("LibExtraTip-1");
+local LibRealmInfo = LibStub("LibRealmInfo");
 
 local SAVEDVARS = {
 	global = {
@@ -72,8 +73,8 @@ function addon:OnEnable()
 	
 	addon:UpdateTimePlayed();
 	
-	-- Set ticker to update played time every half an hour
-	C_Timer.NewTicker(1800, function()
+	-- Set ticker to update played time
+	C_Timer.NewTicker(600, function()
 		addon:UpdateTimePlayed();
 	end);
 	
@@ -216,18 +217,24 @@ function addon:GetPlayerName(withRealm)
 end
 
 function addon:GetHomeRealm()
-	local name = string.gsub(GetRealmName(), " ", "");
-	return name;
+	return GetRealmName();
 end
 
 function addon:GetConnectedRealms()
-	local realms = GetAutoCompleteRealms();
+	-- Need to use LibRealmInfo to get connections because Blizz function strips spaces and stuff
+	local id, _, _, _, _, _, _, _, connections = LibRealmInfo:GetRealmInfo(GetRealmName());
 	
-	if(realms) then
-		return realms;
+	local realms = {};
+	if(connections) then
+		for _, realmID in ipairs(connections) do
+			local id, name = LibRealmInfo:GetRealmInfoByID(realmID);
+			tinsert(realms, name);
+		end
 	else
-		return { addon:GetHomeRealm() };
+		realms = { addon:GetHomeRealm() };
 	end
+	
+	return realms;
 end
 
 function addon:GetConnectedRealmsName()

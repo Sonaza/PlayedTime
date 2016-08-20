@@ -22,7 +22,7 @@ local settings = {
 		addon:BrokerOnClick(frame, button);
 	end,
 	OnEnter = function(frame)
-		if(addon.tooltipAnchor) then return end
+		if(addon.tooltipAnchor or DropDownList1:IsVisible()) then return end
 		addon.tooltipAnchor = frame;
 		
 		addon.tooltip = LibQTip:Acquire("PlayedTimeBrokerTooltip", 2, "LEFT", "RIGHT");
@@ -236,12 +236,16 @@ function addon:BrokerOnEnter(frame, tooltip)
 			addon:FormatTime(data.levelTime, addon.db.global.UseShort)
 		);
 		
-		tooltip:AddLine(" ");
+		
 	end
 	
 	-----------------------------------------
 	-- Current realm
 	do
+		if(#tooltipdata.currentRealm.characters > 0) then
+			tooltip:AddLine(" ");
+		end
+		
 		for _, charInfo in ipairs(tooltipdata.currentRealm.characters) do
 			local name, realm, faction, data = addon:UnpackCharacterInfo(charInfo);
 			
@@ -260,7 +264,7 @@ function addon:BrokerOnEnter(frame, tooltip)
 		end
 	end
 	
-	if(#tooltipdata.currentRealm.characters > 1) then
+	if(#tooltipdata.currentRealm.characters > 0) then
 		tooltip:AddSeparator();
 		tooltip:AddLine(
 			"|cffffd200Realm total|r",
