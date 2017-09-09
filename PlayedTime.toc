@@ -1,7 +1,7 @@
-## Interface: 70000
+## Interface: 70300
 ## Title: Played|cffffffffTime|r
 ## Notes: If you wish to know just how no-life you really are
-## Version: 0.1.0
+## Version: 0.1.1
 ## Author: Sonaza
 ## OptionalDeps: Ace3
 ## SavedVariables: PlayedTimeDB

@@ -550,7 +550,7 @@ function addon:GetMenuData()
 				CloseMenus();
 			end,
 			checked = function()
-				return addon.db.global.ShortBroker;
+				return not addon.db.global.ShortBroker;
 			end,
 			isNotRadio = true,
 		},
